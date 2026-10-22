@@ -73,6 +73,7 @@ Simulations verified switch-node ringing behavior, startup inrush current, and t
 
 2.5V
 <img width="773" height="791" alt="image" src="https://github.com/user-attachments/assets/595d9a4e-8a1b-40a3-a3ee-af06cb04a0ec" />
+
 3.3V
 <img width="625" height="633" alt="image" src="https://github.com/user-attachments/assets/50f73dd5-b5ce-470e-82b5-8e170fbaf75e" />
 
