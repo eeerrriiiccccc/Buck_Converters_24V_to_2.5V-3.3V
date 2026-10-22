@@ -61,10 +61,18 @@ Simulations verified switch-node ringing behavior, startup inrush current, and t
 
 ## PCB Layout
 
-<img width="1119" height="1161" alt="image" src="https://github.com/user-attachments/assets/d1ec19e4-678b-432b-bf3f-f743b672f35b" />
+<img width="1005" height="1050" alt="image" src="https://github.com/user-attachments/assets/c33bf99d-3ac2-4aa0-a2f0-f1290a6bd356" />
+
+
+<img width="1024" height="1061" alt="image" src="https://github.com/user-attachments/assets/a53f76fb-5a0b-4561-a24f-5f386fb67d81" />
+
+
 
 3D view
-<img width="901" height="920" alt="image" src="https://github.com/user-attachments/assets/3599e6f1-cb2e-4280-92ff-2493703cf2d5" />
+
+<img width="773" height="791" alt="image" src="https://github.com/user-attachments/assets/595d9a4e-8a1b-40a3-a3ee-af06cb04a0ec" />
+<img width="625" height="633" alt="image" src="https://github.com/user-attachments/assets/50f73dd5-b5ce-470e-82b5-8e170fbaf75e" />
+
 
 Key layout decisions include:
 
