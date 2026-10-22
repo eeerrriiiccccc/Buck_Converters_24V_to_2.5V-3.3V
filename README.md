@@ -61,16 +61,19 @@ Simulations verified switch-node ringing behavior, startup inrush current, and t
 
 ## PCB Layout
 
+2.5V
 <img width="1005" height="1050" alt="image" src="https://github.com/user-attachments/assets/c33bf99d-3ac2-4aa0-a2f0-f1290a6bd356" />
 
-
+3.3V
 <img width="1024" height="1061" alt="image" src="https://github.com/user-attachments/assets/a53f76fb-5a0b-4561-a24f-5f386fb67d81" />
 
 
 
 3D view
 
+2.5V
 <img width="773" height="791" alt="image" src="https://github.com/user-attachments/assets/595d9a4e-8a1b-40a3-a3ee-af06cb04a0ec" />
+3.3V
 <img width="625" height="633" alt="image" src="https://github.com/user-attachments/assets/50f73dd5-b5ce-470e-82b5-8e170fbaf75e" />
 
 
