@@ -1,6 +1,6 @@
 # 24 V → 2.5 V / 3.3 V Synchronous Buck Converters with SCR Crowbar Protection
 
-**Eric Zhang** · Power stage of the PN (Power & Network) Controller board · Altium Designer · 6-layer PCB
+**Eric Zhang** · Power stage of the PN (Power & Network) Controller board · Rev 2 (final) · Altium Designer · 6-layer PCB
 
 Two 3 A point-of-load regulators built around the **TI LM60440** (36 V, 4 A, 1 MHz synchronous buck). They step a 24 V bus down to the rails that power an Ethernet switch / PoE / SFP subsystem. Each rail has a replaceable fuse, a Zener-triggered SCR crowbar, and a fuse-status LED. Every component value below is derived from, and cross-referenced to, the [LM604x0 datasheet (SNVSBN5A)](https://www.ti.com/lit/ds/symlink/lm60430.pdf).
 
@@ -19,7 +19,7 @@ Two 3 A point-of-load regulators built around the **TI LM60440** (36 V, 4 A, 1 M
 - **Datasheet-driven design.** Feedback divider, inductor, output/input capacitors, feed-forward cap, bootstrap/VCC caps and PG pull-up are each sized with the TI design equations and cited by section and equation number ([full derivations](docs/design_calculations.md)).
 - **Worst-case analysis, not just nominal.** Output tolerance from $`V_{REF}`$ ±1.5 % and 1 % resistors, minimum on-time headroom across the 1 MHz ±15 % oscillator spread, inductor peak current at −20 % inductance, and crowbar trip windows across Zener tolerance and SCR gate-voltage spread.
 - **Reproducible numbers.** Every value on this page comes from [`calc/buck_calcs.py`](calc/buck_calcs.py), so changing a component and re-running updates the whole analysis.
-- **Self-review.** The analysis found that the 3.3 V crowbar trips too high (≈5.4–6.7 V) to protect a 4 V-abs-max load. That finding and the other Rev 2 improvements are documented in the [design review](#design-review--rev-2) below.
+- **Documented revision.** Rev 2 moves from the LM60430 at 400 kHz to the LM60440 at 1 MHz and specifies every part. The [revision history](#revision-history) compares it with Rev 1 and records the known limitations the worst-case analysis found.
 
 ## Specifications
 
@@ -80,7 +80,7 @@ V_{TRIP} \approx V_Z\!\left(I_Z = \tfrac{V_{GT}}{R_{GK}}\right) + V_{GT}
 |---|---|---|
 | Trip window (Zener tolerance, $`V_{GT}`$ 0.5–1.0 V) | **3.6 – 5.0 V** (typ 4.0 V) | **5.4 – 6.7 V** (typ 5.8 V) |
 | Most sensitive downstream limit | TPS7A83A IN: 7.0 V abs max | TPS23861 VDD: **4.0 V abs max** |
-| Verdict | ✅ trips well below the load's limit | ⚠️ trips *above* the load's limit, Rev 2 fix below |
+| Verdict | ✅ trips well below the load's limit | ⚠️ trips *above* the load's limit (see [known limitations](docs/revision_history.md#known-limitations)) |
 
 ## Schematics
 
@@ -116,18 +116,18 @@ Layout choices, mapped to the TI layout guidelines (§11.1):
 - **Switch node (guideline 8).** The inductor sits directly over the SW pins to keep the high-dv/dt copper area small.
 - **Thermal (guidelines 5, 7).** A solid inner ground plane plus stitching vias spread heat away from the exposed pad. The estimated IC loss is ≈ 1.1 W (2.5 V) and ≈ 1.5 W (3.3 V) at an assumed 85 % efficiency. Keeping $`T_J \le 150`$ °C at 85 °C ambient requires an effective $`R_{\theta JA}`$ below ≈ 59 and 43 °C/W respectively (Eq. 10); bring-up will verify this with a thermal camera.
 
-## Design Review & Rev 2
+## Revision History
 
-Findings from reviewing my own Rev 1 design against the datasheets:
+**Rev 2 is the current and final revision.** The [revision page](docs/revision_history.md) compares it line by line with the original Rev 1 design and lists the known limitations found by the worst-case analysis.
 
-| # | Finding | Impact | Rev 2 action |
-|---|---|---|---|
-| 1 | The 3.3 V crowbar trips at 5.4–6.7 V, but the TPS23861 VDD abs max is 4.0 V. | Overvoltage could damage loads before the crowbar fires. | Replace the Zener trigger with a **TL431 shunt-reference trigger** set to 3.8 V ($`R_{top}/R_{bot} = 3.8/2.495 - 1 = 0.523`$, e.g. 52.3 kΩ / 100 kΩ). That is above the regulator's PG-OV point (3.53 V) and below 4 V. Precision ±1–2 % instead of ±15 %. |
-| 2 | 2.5 V crowbar margin at hot. The MMSZ3V3 can conduct about 1–2 mA at the 2.57 V worst-case rail, which puts 0.1–0.2 V on the gate. The MCR706A only guarantees non-triggering below 0.2 V at 110 °C. | Possible nuisance trip at high temperature. | Use the same TL431 trigger (≈ 3.0 V trip), or validate across temperature during bring-up. |
-| 3 | Fuse/SCR coordination: the 4 A fuse melts at 29 A²s, but the MCR706A is rated for only 2.6 A²s. | In a hard high-side short from a stiff 24 V source, the SCR may fail before the fuse opens (SCRs usually fail short, but that isn't guaranteed). | Use a higher-surge SCR with I²t > fuse clearing I²t, or reduce the fuse rating once the load budget is measured. |
-| 4 | A single 10 µF 50 V X7R input cap loses a large share of its capacitance at 24 V DC bias. TI's ≥ 10 µF requirement is for *effective* capacitance. | Higher input ripple and EMI. | Add a second 10 µF per rail, plus 20–100 µF bulk if the 24 V bus arrives over a harness (§10). |
-| 5 | The output capacitor MPN is not yet fixed (only the 1210 footprint is chosen). Eq. 5 needs ≥ 117 µF *effective* on the 2.5 V rail. | 2 × 100 µF may fall short after DC-bias derating. | Choose a ≥ 10 V X5R/X7R part using its bias curve, and add a third 100 µF if needed. |
-| 6 | PG is only pulled up; EN is tied to VIN. | No fault reporting and no sequencing. | Route PG to the controller and add an EN divider UVLO (Eq. 9: 137 kΩ / 10 kΩ gives 18.1 V on and 16.6 V off). |
+| | Rev 1 | Rev 2 (current) |
+|---|---|---|
+| Regulator / $`f_{SW}`$ | LM60430 (3 A) at 400 kHz | LM60440DRPKR (4 A) at 1 MHz |
+| Inductors (2.5 V / 3.3 V) | 6.8 µH / 8.2–10 µH, generic | 3.3 µH / 4.7 µH, Würth WE-XHMI |
+| Passives | Feed-forward bound only; input and output caps not specified | $`C_{FF}`$ 10 / 15 pF, 10 µF + 2 × 220 nF in, 2 × 100 µF out |
+| Crowbar | 3.0 V / 5.1 V Zeners, generic SCR, 1 kΩ gate resistor on 2.5 V | MMSZ3V3 / SZMMSZ5V1, MCR706A, 100 Ω on both rails |
+| Fuse | Holder only | 4 A fast-acting (Littelfuse 0217004.MXP) |
+| Analysis | Nominal values | Worst-case values, cited to the datasheet, reproducible script |
 
 ## Bring-up Plan
 
@@ -148,7 +148,8 @@ Full procedure with pass/fail criteria: [docs/bringup_test_plan.md](docs/bringup
 ├── docs/
 │   ├── design_calculations.md    ← full derivations with datasheet citations
 │   ├── bringup_test_plan.md      ← verification plan and pass criteria
-│   └── archive/                  ← Rev 0 README and calculations (superseded)
+│   ├── revision_history.md       ← Rev 1 → Rev 2 comparison and known limitations
+│   └── archive/                  ← Rev 1 README and calculations (superseded)
 ├── hardware/
 │   └── PN_Controller_Gerbers_WIP.zip
 └── images/                       ← schematics, layout, 3D, stackup
