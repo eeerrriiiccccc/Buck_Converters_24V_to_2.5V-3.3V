@@ -24,7 +24,7 @@ Bench supply (current-limited, 0–36 V), electronic load (≥ 5 A, transient mo
 | 10 | Current limit / short | Short the output before the fuse | Hiccup mode (about 94 ms period). No damage. Recovers on release. |
 | 11 | Crowbar trip point | Unpowered regulator. Ramp an external supply (current-limited to 1 A) onto the rail after the fuse. | Record V_TRIP. Expect 3.6–5.0 V (2.5 V rail) and 5.4–6.7 V (3.3 V rail). |
 | 12 | Crowbar + fuse clearing | Spare board, sacrificial fuse. Trigger the crowbar with the rail powered from a 24 V supply through the fuse. | Fuse opens, the LED extinguishes, and the SCR survives (inspect, then retest its blocking). |
-| 13 | Nuisance-trip margin | Hot-air the crowbar area to about 100 °C at max VOUT | No SCR trigger (validates Rev 2 finding #2) |
+| 13 | Nuisance-trip margin | Hot-air the crowbar area to about 100 °C at max VOUT | No SCR trigger (checks the 2.5 V hot-margin limitation) |
 
 ## Results
 

@@ -128,8 +128,3 @@ for name, r in RAILS.items():
     p("Fuse dissipation at 3 A", IOUT**2 * FUSE_R, "W")
 
 print("\nFuse vs SCR coordination: fuse melting I2t", FUSE_I2T, "A2s vs SCR I2t", SCR_I2T, "A2s")
-# Rev 2: TL431 crowbar trigger at 3.8 V
-print("Rev2 TL431 divider for 3.8 V trip: Rtop/Rbot =", 3.8 / 2.495 - 1)
-# Rev 2: EN UVLO (Eq 9) for VON = 18 V, RENB = 10k
-RENB, VON = 10e3, 18.0
-print("Rev2 Eq 9: RENT =", (VON / 1.231 - 1) * RENB, " VOFF =", VON * (1 - 0.1 / 1.231))

@@ -123,7 +123,7 @@ Ripple check (Eq. 6), assuming 50 % effective capacitance (100 µF) and about 1 
 V_r \approx \Delta I_L\sqrt{ESR^2 + \left(\frac{1}{8 f_{SW} C_{OUT}}\right)^2} \;\Rightarrow\; 1.1\ \text{mV (2.5 V)},\ 1.0\ \text{mV (3.3 V)}
 ```
 
-**Open item.** MLCCs lose capacitance under DC bias, and TI defines every capacitance in this section as the *effective* value (note, p.16). Only the 1210 footprint is chosen so far. The final MPN should be ≥ 10 V rated (TI's guidance for outputs ≤ 3.3 V, p.19), and its bias curve must show ≥ 117 µF on the 2.5 V rail. If it doesn't, add a third 100 µF. Total capacitance must stay below about 10× the design value, or 1000 µF (p.19).
+**Open item.** MLCCs lose capacitance under DC bias, and TI defines every capacitance in this section as the *effective* value (note, p.16). Only the 1210 footprint is chosen so far. The final MPN should be ≥ 10 V rated (TI's guidance for outputs ≤ 3.3 V, p.19), and its bias curve must show ≥ 117 µF on the 2.5 V rail. Total capacitance must stay below about 10× the design value, or 1000 µF (p.19).
 
 The 100 nF caps (C137, C125) follow TI's advice to add a small 1–100 nF ceramic to suppress high-frequency spikes (p.19).
 
@@ -163,7 +163,7 @@ I_{RMS} \approx \frac{I_{OUT}}{2} = 1.5\ \text{A}
 | C141 / C126 | 10 µF, 50 V, X7R, 1210 (Yageo CC1210KKX7R9BB106) | Bulk ceramic, rated at 2× the 24 V bus |
 | C128, C129 / C138, C139 | 220 nF, 50 V, X7R, 0805 | HF bypass, one at each VIN/PGND pair |
 
-**Open item.** At 24 V (48 % of rated voltage), a 50 V X7R 1210 delivers noticeably less than its nameplate 10 µF, so a second 10 µF is planned for Rev 2. Average input current is $`V_{OUT}I_{OUT}/(V_{IN}\eta)`$ ≈ 0.37 A (2.5 V) and 0.49 A (3.3 V) at an assumed 85 % efficiency (Eq. 11, p.25).
+**Open item.** At 24 V (48 % of rated voltage), a 50 V X7R 1210 delivers noticeably less than its nameplate 10 µF, so the effective input capacitance is below TI's 10 µF guideline (a [known limitation](revision_history.md#known-limitations)). Average input current is $`V_{OUT}I_{OUT}/(V_{IN}\eta)`$ ≈ 0.37 A (2.5 V) and 0.49 A (3.3 V) at an assumed 85 % efficiency (Eq. 11, p.25).
 
 ---
 
@@ -177,14 +177,6 @@ I_{RMS} \approx \frac{I_{OUT}}{2} = 1.5\ \text{A}
 | PG pull-up (R78 / R35) | 100 kΩ to VOUT | "pulled up to either VCC or VOUT, through a 100-kΩ resistor" (§8.3.1, p.10) |
 
 PG thresholds (typ): it flags undervoltage below 92 % (2.30 V / 3.04 V) and overvoltage above 107 % (2.68 V / 3.53 V).
-
-**Rev 2 external UVLO (§9.2.2.10, Eq. 9, p.21).** This keeps the rails off until the bus is healthy:
-
-```math
-R_{ENT} = \left(\frac{V_{ON}}{V_{EN-H}} - 1\right)R_{ENB},\qquad V_{OFF} = V_{ON}\left(1 - \frac{V_{EN-HYS}}{V_{EN-H}}\right)
-```
-
-With $`R_{ENB}`$ = 10 kΩ and $`V_{ON}`$ = 18 V: $`R_{ENT}`$ = 136 kΩ → **137 kΩ** (E96), giving turn-on at 18.1 V and turn-off at 16.6 V.
 
 ---
 
@@ -219,7 +211,7 @@ Chosen fuse: **Littelfuse 0217004.MXP**, 4 A, 250 V, fast-acting (IEC 60127-2 sh
 | Nominal melting I²t | 29.2 A²s | See coordination note |
 | Interrupting rating | 35 A or 10 × $`I_n`$ | |
 
-**Coordination with the SCR.** The MCR706A is rated for $`I^2t`$ = 2.6 A²s and $`I_{TSM}`$ = 25 A (half sine, 60 Hz). That is below the fuse's 29 A²s melting I²t, so in a hard high-side-FET short fed by a stiff 24 V source, the SCR may fail before the fuse opens. SCRs usually fail short, so the rail stays clamped, but this is not guaranteed. Rev 2: an SCR rated for I²t above the fuse's clearing I²t.
+**Coordination with the SCR.** The MCR706A is rated for $`I^2t`$ = 2.6 A²s and $`I_{TSM}`$ = 25 A (half sine, 60 Hz). That is below the fuse's 29 A²s melting I²t, so in a hard high-side-FET short fed by a stiff 24 V source, the SCR may fail before the fuse opens. SCRs usually fail short, so the rail stays clamped, but this is not guaranteed.
 
 **Feedback-sense placement.** FB is taken *before* the fuse on purpose. If it were taken after, a blown fuse would read as 0 V on FB, and the regulator would push to maximum duty cycle and charge its own output capacitors toward 24 V.
 
@@ -248,13 +240,7 @@ Part data:
 
 Filter: $`\tau = R_{GK}C_{GK}`$ = 10 µs. Soft-start ramps the rail at about $`V_{OUT}/4.4\text{ ms}`$ ≈ 0.75 V/ms, far below the SCR's 10 V/µs dv/dt rating, so start-up cannot falsely trigger it.
 
-**Rev 2: precision trigger.** Replace the Zener with a TL431 shunt reference ($`V_{REF}`$ = 2.495 V) sensing the rail through a divider:
-
-```math
-V_{TRIP} = 2.495\left(1 + \frac{R_{top}}{R_{bot}}\right) = 3.8\ \text{V} \;\Rightarrow\; \frac{R_{top}}{R_{bot}} = 0.523 \;(52.3\ \text{k}\Omega / 100\ \text{k}\Omega)
-```
-
-That places the trip above the 3.41 V worst-case regulated output and the 3.53 V PG-OV flag, and below the 4.0 V abs max. The spread is about ±2 %, compared with ±15 % for the Zener approach. The same circuit set to about 3.0 V also removes the 2.5 V rail's hot-temperature nuisance-trip margin issue (a worst-case MMSZ3V3 can pass 1–2 mA at 2.57 V, which puts 0.1–0.2 V on the gate against a 0.2 V guaranteed non-trigger level).
+**Hot nuisance-trip margin (2.5 V rail).** A worst-case MMSZ3V3 can pass 1–2 mA at the 2.57 V maximum rail, which puts 0.1–0.2 V on the gate. The MCR706A guarantees non-triggering only below 0.2 V at 110 °C, so the margin at high temperature is small. Bring-up test 13 checks it.
 
 ---
 
@@ -267,7 +253,7 @@ That places the trip above the 3.41 V worst-case regulated output and the 3.53 V
 | $`I_{SAT}`$ | ≥ $`I_{LIMIT}`$; ideally ≥ $`I_{SC}`$ | ✅ (soft-sat) | ✅ (soft-sat) |
 | $`C_{OUT}`$ | Eq. 5 effective value | ⚠️ MPN pending | ✅ (likely) |
 | $`C_{FF}`$ | < Eq. 8 bound | ✅ | ✅ |
-| $`C_{IN}`$ | ≥ 10 µF effective, 220 nF HF per pair | ⚠️ add 2nd 10 µF | ⚠️ add 2nd 10 µF |
+| $`C_{IN}`$ | ≥ 10 µF effective, 220 nF HF per pair | ⚠️ < 10 µF effective at 24 V | ⚠️ < 10 µF effective at 24 V |
 | CBOOT / CVCC / PG | 100 nF / 1 µF / 100 kΩ | ✅ | ✅ |
 | Min on-time at 24 V | Eq. 2 | ✅ (foldback > 27 V) | ✅ |
-| Crowbar vs load abs max | trip < abs max | ✅ | ⚠️ Rev 2 |
+| Crowbar vs load abs max | trip < abs max | ✅ | ⚠️ trips above 4 V abs max |
